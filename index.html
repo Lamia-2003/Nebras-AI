@@ -5,20 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نبراس AI | اكتشف مسارك</title>
     <style>
-        /* ستايل عام مريح للعين */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f0f2f5; 
             display: flex; justify-content: center; align-items: center; 
             height: 100vh; margin: 0; overflow: hidden;
         }
-
-        /* حاوية الكروت */
-        .tinder-wrapper {
-            position: relative; width: 320px; height: 450px;
-        }
-
-        /* تصميم الكرت الواحد */
+        .tinder-wrapper { position: relative; width: 320px; height: 450px; }
         .card {
             width: 100%; height: 100%;
             background: white; border-radius: 20px;
@@ -28,30 +21,29 @@
             justify-content: center; align-items: center;
             text-align: center; padding: 20px;
             transition: transform 0.5s ease, opacity 0.5s ease;
-            user-select: none; border: 2px solid #eee;
+            user-select: none; border: 2px solid #eee; cursor: grab;
+            box-sizing: border-box;
         }
-
-        .card h3 { color: #333; margin-bottom: 15px; }
+        .card h3 { color: #333; margin: 15px 0; }
         .card p { color: #666; font-size: 0.9rem; }
-        .icon { font-size: 50px; margin-bottom: 20px; }
-
-        /* تلميحات الحركة */
+        .icon { font-size: 60px; }
         .hint {
             position: absolute; bottom: -50px; width: 100%;
             display: flex; justify-content: space-between; font-weight: bold;
         }
-        .right { color: #4CAF50; } /* يمين = نعم */
-        .left { color: #F44336; }  /* يسار = لا */
+        .right { color: #4CAF50; }
+        .left { color: #F44336; }
+        button {
+            padding: 10px 20px; background: #007bff; color: white;
+            border: none; border-radius: 5px; cursor: pointer; margin-top: 20px;
+        }
     </style>
 </head>
 <body>
 
     <div class="tinder-wrapper" id="cardContainer">
         <div class="card" id="mainCard">
-            <div class="icon">💡</div>
-            <h3>جاهزة لاكتشاف مسارك؟</h3>
-            <p>اسحبي الكرت لليمين للموافقة، ولليسار للرفض</p>
-        </div>
+            </div>
 
         <div class="hint">
             <span class="left">← لا</span>
@@ -60,47 +52,97 @@
     </div>
 
     <script>
-const card = document.getElementById('mainCard');
-let startX = 0; // نقطة بداية اللمس/النقر
-let currentX = 0; // مكان الماوس الحالي أثناء السحب
+        const questions = [
+            { text: "هل جاهزة للبدء؟ اسحبي لليمين!", icon: "🚀", track: "start" },
+            { text: "هل تستمتعين بتصميم أشكال المواقع وألوانها؟", icon: "🎨", track: "Frontend" },
+            { text: "هل تحبين حل الألغاز والتعامل مع البيانات والمنطق؟", icon: "⚙️", track: "Backend" },
+            { text: "هل يشدكِ بناء تطبيقات تعمل على الهواتف الذكية؟", icon: "📱", track: "Mobile" },
+            { text: "هل تهتمين بحماية البيانات واكتشاف الثغرات؟", icon: "🛡️", track: "Cybersecurity" },
+            { text: "هل يستهويكِ تدريب الآلات لتصبح ذكية؟", icon: "🤖", track: "AI" }
+        ];
 
-// 1. عندما يضغط المستخدم (بداية السحب)
-card.addEventListener('mousedown', (e) => {
-    startX = e.clientX;
-    card.style.transition = 'none'; // إلغاء الانسيابية أثناء السحب للتحكم الكامل
-    card.style.cursor = 'grabbing';
-});
+        let currentQuestionIndex = 0;
+        let scores = { Frontend: 0, Backend: 0, Mobile: 0, Cybersecurity: 0, AI: 0 };
+        
+        const card = document.getElementById('mainCard');
+        const container = document.getElementById('cardContainer');
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
 
-// 2. أثناء تحريك الماوس
-window.addEventListener('mousemove', (e) => {
-    if (startX === 0) return; // إذا لم يكن هناك ضغط، لا تفعل شيئاً
-    currentX = e.clientX;
-    const deltaX = currentX - startX; // المسافة المقطوعة
-    const rotation = deltaX / 10; // تدوير الكرت قليلاً لإعطاء تأثير واقعي
-    
-    card.style.transform = `translateX(${deltaX}px) rotate(${rotation}deg)`;
-});
+        // دالة لتحديث محتوى الكرت
+        function updateCard() {
+            const q = questions[currentQuestionIndex];
+            card.innerHTML = `
+                <div class="icon">${q.icon}</div>
+                <h3>${q.text}</h3>
+                <p>اسحبي لليمين (نعم) أو لليسار (لا)</p>
+            `;
+            card.style.transition = 'none';
+            card.style.transform = 'translateX(0px) rotate(0deg)';
+            setTimeout(() => card.style.transition = 'transform 0.5s ease', 50);
+        }
 
-// 3. عندما يترك المستخدم الكرت
-window.addEventListener('mouseup', () => {
-    if (startX === 0) return;
-    
-    const deltaX = currentX - startX;
-    card.style.transition = 'transform 0.5s ease'; // إعادة الانسيابية للعودة أو الطيران
-    
-    if (Math.abs(deltaX) > 100) { // إذا سحب أكثر من 100 بكسل
-        const direction = deltaX > 0 ? 1000 : -1000; // طيران لليمين أو اليسار
-        card.style.transform = `translateX(${direction}px) rotate(${direction/10}deg)`;
-        alert(deltaX > 0 ? "قلتِ نعم! ✅" : "قلتِ لا! ❌");
-    } else {
-        // إذا لم يسحب كفاية، يعود الكرت للمنتصف
-        card.style.transform = `translateX(0px) rotate(0deg)`;
-    }
-    
-    startX = 0; // إعادة ضبط البداية
-    card.style.cursor = 'grab';
-});
+        // دالة إظهار النتيجة النهائية
+        function showResult() {
+            const bestTrack = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+            container.innerHTML = `
+                <div class="card">
+                    <div class="icon">🎓</div>
+                    <h3>المسار المقترح لكِ هو:</h3>
+                    <h2 style="color: #4CAF50;">${bestTrack}</h2>
+                    <p>بناءً على اهتماماتك، هذا هو المسار الأنسب لكِ!</p>
+                    <button onclick="location.reload()">إعادة الاختبار</button>
+                </div>
+            `;
+        }
+
+        // تشغيل أول كرت
+        updateCard();
+
+        card.addEventListener('mousedown', (e) => {
+            startX = e.clientX;
+            isDragging = true;
+            card.style.transition = 'none';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            currentX = e.clientX;
+            const deltaX = currentX - startX;
+            card.style.transform = `translateX(${deltaX}px) rotate(${deltaX / 10}deg)`;
+        });
+
+        window.addEventListener('mouseup', () => {
+            if (!isDragging) return;
+            isDragging = false;
+            const deltaX = currentX - startX;
+
+            if (Math.abs(deltaX) > 100) {
+                const direction = deltaX > 0 ? 1000 : -1000;
+                card.style.transform = `translateX(${direction}px) rotate(${direction / 10}deg)`;
+                
+                // تسجيل النقاط (إذا لم يكن كرت البداية)
+                if (currentQuestionIndex > 0 && deltaX > 0) {
+                    const track = questions[currentQuestionIndex].track;
+                    scores[track]++;
+                }
+
+                // الانتقال للسؤال التالي
+                setTimeout(() => {
+                    currentQuestionIndex++;
+                    if (currentQuestionIndex < questions.length) {
+                        updateCard();
+                    } else {
+                        showResult();
+                    }
+                }, 300);
+            } else {
+                card.style.transition = 'transform 0.5s ease';
+                card.style.transform = 'translateX(0px) rotate(0deg)';
+            }
+            startX = 0;
+        });
     </script>
-
 </body>
 </html>
