@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نبراس AI | اكتشف مسارك</title>
     <style>
+        .progress-container {
+    width: 320px; height: 10px;
+    background: #e0e0e0; border-radius: 5px;
+    margin-bottom: 20px; overflow: hidden;
+}
+.progress-bar {
+    width: 0%; height: 100%;
+    background: #4CAF50;
+    transition: width 0.3s ease;
+}
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             background-color: #f0f2f5; 
@@ -41,6 +51,9 @@
 </head>
 <body>
 
+    <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+</div>
     <div class="tinder-wrapper" id="cardContainer">
         <div class="card" id="mainCard">
             </div>
@@ -71,7 +84,13 @@
         let isDragging = false;
 
         // دالة لتحديث محتوى الكرت
+        // دالة لتحديث محتوى الكرت
         function updateCard() {
+            // تحديث شريط التقدم أولاً
+            const progress = (currentQuestionIndex / (questions.length - 1)) * 100;
+            document.getElementById('progressBar').style.width = progress + "%";
+
+            // تحديث محتوى الكرت
             const q = questions[currentQuestionIndex];
             card.innerHTML = `
                 <div class="icon">${q.icon}</div>
@@ -93,6 +112,7 @@
                     <h2 style="color: #4CAF50;">${bestTrack}</h2>
                     <p>بناءً على اهتماماتك، هذا هو المسار الأنسب لكِ!</p>
                     <button onclick="location.reload()">إعادة الاختبار</button>
+                    <p style="font-size: 0.7rem; color: #aaa; margin-top: 20px;">تطوير المبرمجة: لمياء 💻</p>
                 </div>
             `;
         }
