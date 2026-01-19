@@ -3,203 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نبراس AI | اكتشف مسارك</title>
-    <style>
-        .progress-container { position: fixed; top: 0; left: 0; width: 100%; height: 6px; background: #e0e0e0; z-index: 1000; }
-        .progress-bar { width: 0%; height: 100%; background: linear-gradient(to left, #4facfe 0%, #22acb4 100%); transition: width 0.3s ease; }
-        
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background-color: #ebeef1; display: flex; justify-content: center; 
-            align-items: center; height: 100vh; margin: 0; overflow: hidden;
-        }
-
-        .tinder-wrapper { 
-            position: relative; 
-            width: 320px; 
-            height: 520px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-        }
-
-        .card {
-            width: 100%; 
-            height: 450px; 
-            background: white; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            position: absolute; top: 0; display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-            text-align: center; padding: 20px; transition: transform 0.5s ease, opacity 0.5s ease;
-            user-select: none; border: 2px solid #eee; cursor: grab; box-sizing: border-box; touch-action: none;
-        }
-
-        .hint {
-            position: absolute;
-            bottom: 15px; 
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 35px;
-            box-sizing: border-box;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-
-        .journey-path { margin-top: 20px; display: flex; flex-direction: column; align-items: start; width: 100%; }
-        .step { display: flex; align-items: center; gap: 15px; text-align: right; }
-        .step-icon { width: 40px; height: 40px; background: #e0f7fa; border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
-        .step-content h4 { margin: 0; font-size: 0.9rem; color: #333; }
-        .step-content p { margin: 2px 0 0; font-size: 0.7rem; color: #888; }
-        .connector {
-            width: 40px;
-            height: 30px;
-            border-left: 3px solid #22acb4;
-            border-bottom: 3px solid #22acb4;
-            border-radius: 0 0 0 20px;
-            margin: 5px 0 5px 30px;
-            opacity: 0.4;
-        }
-        .journey-path .step:nth-child(even) + .connector {
-            border-left: none;
-            border-right: 3px solid #22acb4;
-            border-bottom: 3px solid #22acb4;
-            border-radius: 0 0 20px 0;
-            margin-left: 0;
-            margin-right: 30px;
-        }
-        
-        button { padding: 12px 20px; background: #22acb4; color: white; border: none; border-radius: 12px; cursor: pointer; margin-top: 20px; width: 100%; font-weight: bold; }
-    </style>
+    <title>نبراس AI | اكتشف مسارك التقني</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-    <div class="progress-container"><div class="progress-bar" id="progressBar"></div></div>
+    <button id="langSwitcher" class="lang-btn" onclick="toggleLanguage()">English</button>
+
+    <div class="progress-container">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
 
     <div class="tinder-wrapper" id="cardContainer">
         <div class="card" id="mainCard"></div>
-        <div class="hint">
-            <span style="color: #F44336;">← لا</span>
-            <span style="color: #4CAF50;">نعم →</span>
+        <div class="hint" id="hintArea">
+            <span id="noText" style="color: #F44336;">← لا</span>
+            <span id="yesText" style="color: #4CAF50;">نعم →</span>
         </div>
     </div>
 
-    <script>
-        // نصوص حيادية تناسب الجميع
-        const questions = [
-            { text: "بدء رحلة اكتشاف الشغف؟ اسحب لليمين!", icon: "🚀", track: "start" },
-            { text: "هل هناك استمتاع بتصميم الواجهات والألوان؟", icon: "🎨", track: "Frontend" },
-            { text: "هل يستهويك حل الألغاز والتعامل مع المنطق؟", icon: "⚙️", track: "Backend" },
-            { text: "هل يشدك بناء تطبيقات للهواتف الذكية؟", icon: "📱", track: "Mobile" },
-            { text: "هل يثير فضولك تدريب الآلات لتصبح ذكية؟", icon: "🤖", track: "AI" }
-        ];
-
-        let currentQuestionIndex = 0;
-        let scores = { Frontend: 0, Backend: 0, Mobile: 0, AI: 0 };
-        const card = document.getElementById('mainCard');
-        const container = document.getElementById('cardContainer');
-        const progressBar = document.getElementById('progressBar');
-        
-        let startX = 0, currentX = 0, isDragging = false;
-
-        function updateCard() {
-            const progress = (currentQuestionIndex / (questions.length - 1)) * 100;
-            progressBar.style.width = progress + "%";
-            const q = questions[currentQuestionIndex];
-            card.innerHTML = `<div class="icon">${q.icon}</div><h3>${q.text}</h3><p style="color:#888; font-size:0.8rem;">سحب لليمين للموافقة | لليسار للرفض</p>`;
-            card.style.transform = 'translateX(0px) rotate(0deg)';
-        }
-
-function showResult() {
-    const bestTrack = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-    
-    // 1. هنا أضفنا الروابط والمدة الزمنية (البيانات المحدثة)
-    const journeys = {
-        AI: { 
-            title: "هندسة الذكاء الاصطناعي", 
-            steps: [
-                ["🐍", "أساسيات بايثون", "أسبوعان", "https://www.google.com/search?q=python+basics+course"],
-                ["📊", "تحليل البيانات", "شهر", "https://www.google.com/search?q=data+analysis+with+pandas"],
-                ["🧠", "نماذج الذكاء", "شهرين", "https://www.google.com/search?q=machine+learning+course"]
-            ] 
-        },
-        Frontend: { 
-            title: "تطوير واجهات المواقع", 
-            steps: [
-                ["🎨", "HTML & CSS", "أسبوع", "https://www.google.com/search?q=html+css+arabic+course"],
-                ["✨", "JavaScript", "3 أسابيع", "https://www.google.com/search?q=javascript+course"],
-                ["⚛️", "إطار عمل React", "شهر", "https://www.google.com/search?q=react+js+tutorial"]
-            ] 
-        }
-        // ... بقية المسارات تتبع نفس النمط
-    };
-
-    const track = journeys[bestTrack] || journeys.AI;
-    document.querySelector('.hint').style.display = 'none';
-
-    // 2. بناء الواجهة الجديدة: أضفنا onclick للروابط و "شارة" للمدة الزمنية
-    container.innerHTML = `
-        <div class="card" id="final-card" style="height:auto; position:relative; padding:25px; opacity:1;">
-            <h3 style="color:#22acb4; margin:0">المسار المقترح هو</h3>
-            <h2 style="margin:5px 0 20px 0">${track.title}</h2>
-            
-            <div class="journey-path">
-                ${track.steps.map((s, i) => `
-                    <div class="step" onclick="window.open('${s[3]}', '_blank')" style="cursor:pointer; width:100%">
-                        <div class="step-icon">${s[0]}</div>
-                        <div class="step-content">
-                            <h4 style="display:flex; justify-content:space-between;">
-                                المحطة ${i+1} 
-                                <span style="font-size:0.6rem; background:#eee; padding:2px 6px; border-radius:10px;">${s[2]}</span>
-                            </h4>
-                            <p>${s[1]} <span style="color:#22acb4; font-size:0.6rem;">(انقر للتعلم 🔗)</span></p>
-                        </div>
-                    </div>
-                    ${i < track.steps.length - 1 ? '<div class="connector"></div>' : ''}
-                `).join('')}
-            </div>
-
-            <div style="display:flex; gap:10px; width:100%">
-                <button onclick="window.print()" style="background:#6c757d; font-size:0.8rem;">حفظ الخريطة (PDF)</button>
-                <button onclick="location.reload()">إعادة الاختبار</button>
-            </div>
-            <p style="font-size:0.6rem; color:#999; margin-top:10px;">🏆 تهانينا! لقد رسمتِ طريق البداية</p>
-        </div>
-    `;
-}
-
-        function startDrag(e) { isDragging = true; startX = e.clientX || e.touches[0].clientX; card.style.transition = 'none'; }
-        function moveDrag(e) {
-            if (!isDragging) return;
-            currentX = e.clientX || (e.touches ? e.touches[0].clientX : 0);
-            const deltaX = currentX - startX;
-            card.style.transform = `translateX(${deltaX}px) rotate(${deltaX / 10}deg)`;
-        }
-        function endDrag() {
-            if (!isDragging) return;
-            isDragging = false;
-            const deltaX = currentX - startX;
-            if (Math.abs(deltaX) > 100) {
-                if (currentQuestionIndex === 0 && deltaX < 0) {
-                    container.innerHTML = `<div class="card" style="position:relative; opacity:1;"><h3>إلى اللقاء! 👋</h3><button onclick="location.reload()">البدء من جديد</button></div>`;
-                    document.querySelector('.hint').style.display = 'none';
-                    return;
-                }
-                if (currentQuestionIndex > 0 && deltaX > 0) scores[questions[currentQuestionIndex].track]++;
-                currentQuestionIndex++;
-                setTimeout(() => {
-                    currentQuestionIndex < questions.length ? updateCard() : showResult();
-                }, 200);
-            } else {
-                card.style.transition = 'transform 0.5s ease';
-                card.style.transform = 'translateX(0px) rotate(0deg)';
-            }
-        }
-
-        card.addEventListener('mousedown', startDrag); card.addEventListener('touchstart', startDrag);
-        window.addEventListener('mousemove', moveDrag); window.addEventListener('touchmove', moveDrag);
-        window.addEventListener('mouseup', endDrag); window.addEventListener('touchend', endDrag);
-
-        updateCard();
-    </script>
+<script src="./script.js"></script>
 </body>
 </html>
